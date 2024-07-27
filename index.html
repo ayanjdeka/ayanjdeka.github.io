@@ -118,8 +118,7 @@
         });
 
         /* Welcome Screen */
-
-        function createScene1() {
+        function createPage1() {
           svg.selectAll('*').remove();
 
           svg.append('text')
@@ -138,7 +137,7 @@
         }
 
         /* MPG Distribution */
-        function createScene2() {
+        function createPage2() {
           svg.selectAll('*').remove();
 
           const barHeight = 20;
@@ -188,8 +187,7 @@
             .attr('class', 'annotation')
             .text('Click Next to see Horsepower vs. Weight');
 
-
-            svg.selectAll('.bar')
+          svg.selectAll('.bar')
             .on('mouseover', function (event, d) {
                 const [x, y] = d3.pointer(event);
                 tooltip.transition()
@@ -207,8 +205,9 @@
                 .style('opacity', 0);
             });
         }
+
         /* HorsePower vs Weight */
-        function createScene3() {
+        function createPage3() {
           svg.selectAll('*').remove();
 
           d3.select('#visualization svg')
@@ -281,7 +280,7 @@
         }
 
         /* Number of cars per country */
-        function createScene4() {
+        function createPage4() {
           svg.selectAll('*').remove();
 
           d3.select('#visualization svg')
@@ -346,7 +345,7 @@
         }
 
         /* MPG scatterplot vs Country */
-        function createScene5() {
+        function createPage5() {
           svg.selectAll('*').remove();
 
           d3.select('#visualization svg')
@@ -413,7 +412,7 @@
         }
 
         /* Horsepower scatterplot across countries */
-        function createScene6() {
+        function createPage6() {
           svg.selectAll('*').remove();
 
           d3.select('#visualization svg')
@@ -479,25 +478,101 @@
             });
         }
 
+        /* Average MPG by Year Line Chart */
+        function createPage7() {
+          svg.selectAll('*').remove();
+
+          d3.select('#visualization svg')
+            .attr('height', height + margin.top + margin.bottom); // Reset height for new chart
+
+          svg.append('text')
+            .attr('x', width / 2)
+            .attr('y', -margin.top / 2)
+            .attr('text-anchor', 'middle')
+            .attr('class', 'annotation')
+            .text('Average MPG by Year');
+
+          // Calculate the average MPG for each year
+          const averageMPGByYear = d3.rollups(data, v => d3.mean(v, d => d.mpg), d => d.model_year)
+            .map(d => ({ year: d[0], avgMPG: d[1] }))
+            .sort((a, b) => a.year - b.year);
+
+          const xScale = d3.scaleLinear()
+            .domain(d3.extent(averageMPGByYear, d => d.year))
+            .range([0, width]);
+
+          const yScale = d3.scaleLinear()
+            .domain([0, d3.max(averageMPGByYear, d => d.avgMPG)])
+            .nice()
+            .range([height, 0]);
+
+          const line = d3.line()
+            .x(d => xScale(d.year))
+            .y(d => yScale(d.avgMPG));
+
+          svg.append('path')
+            .datum(averageMPGByYear)
+            .attr('fill', 'none')
+            .attr('stroke', 'steelblue')
+            .attr('stroke-width', 1.5)
+            .attr('d', line);
+
+          svg.append('g')
+            .attr('transform', `translate(0, ${height})`)
+            .call(d3.axisBottom(xScale).tickFormat(d3.format('d')));
+
+          svg.append('g')
+            .call(d3.axisLeft(yScale));
+
+          svg.selectAll('.dot')
+            .data(averageMPGByYear)
+            .enter()
+            .append('circle')
+            .attr('class', 'dot')
+            .attr('cx', d => xScale(d.year))
+            .attr('cy', d => yScale(d.avgMPG))
+            .attr('r', 5)
+            .attr('fill', 'steelblue')
+            .on('mouseover', function (event, d) {
+              const [x, y] = d3.pointer(event);
+              tooltip.transition()
+                .duration(200)
+                .style('opacity', .9);
+              tooltip.html(`
+                Year: ${d.year}<br/>
+                Avg MPG: ${d.avgMPG.toFixed(2)}
+              `)
+                .style('left', (event.pageX + 5) + 'px')
+                .style('top', (event.pageY - 28) + 'px');
+            })
+            .on('mouseout', function () {
+              tooltip.transition()
+                .duration(500)
+                .style('opacity', 0);
+            });
+        }
+
         // Easy way of creating the scenes helper function
         function showScene(scene) {
           if (scene === 1) {
-            createScene1();
+            createPage1();
           } else if (scene === 2) {
-            createScene2();
+            createPage2();
           } else if (scene === 3) {
-            createScene3();
+            createPage3();
           } else if (scene === 4) {
-            createScene4();
+            createPage4();
           } else if (scene === 5) {
-            createScene5();
+            createPage5();
           } else if (scene === 6) {
-            createScene6();
+            createPage6();
+          } else if (scene === 7) {
+            createPage7();
           }
         }
 
         document.getElementById('next').addEventListener('click', () => {
-          if (currentScene < 6) {
+          if (currentScene < 7) {
             currentScene++;
             showScene(currentScene);
           }
